@@ -1,9 +1,17 @@
 import pyttsx3
 
+# Initialize engine
 engine = pyttsx3.init()
 
-engine.setProperty("rate", 160)
+# Voice settings
+engine.setProperty("rate", 160)   # speed
+engine.setProperty("volume", 1.0) # max volume
 
-engine.say("Driver alert system is working correctly")
+def speak_alert(message):
+    print("AI:", message)
+    engine.say(message)
+    engine.runAndWait()
 
-engine.runAndWait()
+
+# 🚨 Example: Drowsy Driver Alert
+speak_alert("Warning. Driver appears drowsy. Please take a break for twenty minutes as soon as possible.")

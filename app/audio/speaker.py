@@ -1,21 +1,12 @@
 import pyttsx3
-from app.config.settings import VOICE_RATE, VOICE_VOLUME
-
 
 class Speaker:
-
     def __init__(self):
-
         self.engine = pyttsx3.init()
-
-        self.engine.setProperty("rate", VOICE_RATE)
-
-        self.engine.setProperty("volume", VOICE_VOLUME)
+        self.engine.setProperty("rate", 150)
+        self.engine.setProperty("volume", 1.0)
 
     def speak(self, message):
-
         print("AI:", message)
-
         self.engine.say(message)
-
         self.engine.runAndWait()

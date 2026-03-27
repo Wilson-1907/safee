@@ -1,26 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Driver Voice Assistant</title>
-<link rel="stylesheet" href="style.css">
+    <title>Driver Voice</title>
 </head>
-
 <body>
+    <button id="mic-button">🎤</button>
+    <p id="status">Idle</p>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+    const button = document.getElementById("mic-button")
+    const status = document.getElementById("status")
 
-<div class="container">
+    const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)()
+    recognition.lang = "en-US"
 
-<h2>Driver Voice Assistant</h2>
+    button.addEventListener("click", () => {
+        button.classList.add("listening")
+        status.innerText = "Listening..."
+        recognition.start()
+    })
 
-<div id="mic-container">
-<button id="mic-button">🎤</button>
-</div>
+    recognition.onresult = async function(event){
+        const speech = event.results[0][0].transcript
+        status.innerText = "You said: " + speech
+        button.classList.remove("listening")
 
-<p id="status">Tap the microphone and speak</p>
+        try {
+            const response = await fetch("http://localhost:9000/api/voice", {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify({ driver_input: speech })
+            })
+            const data = await response.json()
+            const reply = data.response || "No response"
+            status.innerText = reply
+            const utterance = new SpeechSynthesisUtterance(reply)
+            window.speechSynthesis.speak(utterance)
+        } catch(err){
+            console.error(err)
+            status.innerText = "Backend error or CORS issue"
+        }
+    }
 
-</div>
-
-<script src="script.js"></script>
-
+    recognition.onerror = function(){
+        button.classList.remove("listening")
+        status.innerText = "Could not hear you"
+    }
+    </script>
 </body>
 </html>

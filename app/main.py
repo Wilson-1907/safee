@@ -1,35 +1,60 @@
-import asyncio
-import json
-import websockets
+import threading
+import time
 
+from app.audio.microphone import Microphone
 from app.audio.speaker import Speaker
+from app.api.backend_client import BackendClient
+from app.api.insight_fetcher import get_latest_insight
 
-WS_URL = "ws://localhost:8000/ws/driver-insights"
-
+mic = Microphone()
 speaker = Speaker()
+backend = BackendClient()
+
+last_insight = None
 
 
-async def listen_for_insights():
+# 🎤 DRIVER LISTENING LOOP
+def listen_loop():
+    while True:
+        text = mic.listen()
 
-    print("Waiting for AI model insights...")
+        if not text:
+            continue
 
-    async with websockets.connect(WS_URL) as websocket:
+        print("Driver:", text)
 
-        while True:
+        response = backend.send_voice(text)
 
-            message = await websocket.recv()
+        if response:
+            speaker.speak(response)
 
-            data = json.loads(message)
 
-            insight = data.get("message")
+# 🌐 INSIGHT LOOP (INTERRUPTS)
+def insight_loop():
+    global last_insight
 
-            if insight:
+    while True:
+        insight = get_latest_insight()
 
-                print("AI Insight:", insight)
+        if insight and insight != last_insight:
+            print("🚨 NEW INSIGHT:", insight)
 
-                speaker.speak(insight)
+            # INTERRUPT SPEAK
+            speaker.speak("Alert! " + insight)
+
+            last_insight = insight
+
+        time.sleep(3)  # check every 3 seconds
 
 
 if __name__ == "__main__":
+    print("🚗 Driver AI System Started")
 
-    asyncio.run(listen_for_insights())
+    t1 = threading.Thread(target=listen_loop)
+    t2 = threading.Thread(target=insight_loop)
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()

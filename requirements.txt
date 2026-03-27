@@ -1,5 +1,11 @@
+flask
+flask-cors
+requests
+python-dotenv
 SpeechRecognition
 pyaudio
 pyttsx3
-requests
-websockets
+PyPDF2
+scikit-learn
+groq
+beautifulsoup4
